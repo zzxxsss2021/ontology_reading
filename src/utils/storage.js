@@ -83,17 +83,25 @@ export const storage = {
   getSettings() {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return data ? JSON.parse(data) : {
-        modelProvider: 'openai',
-        modelName: '',
-        apiToken: ''
+
+      // 如果localStorage有数据，使用保存的设置
+      if (data) {
+        return JSON.parse(data);
+      }
+
+      // 否则从环境变量读取默认配置
+      return {
+        modelProvider: import.meta?.env?.VITE_AI_PROVIDER || 'moonshot',
+        modelName: import.meta?.env?.VITE_AI_MODEL || 'moonshot-v1-8k',
+        apiToken: import.meta?.env?.VITE_AI_API_TOKEN || ''
       };
     } catch (error) {
       console.error('Failed to load settings from localStorage:', error);
+      // 错误时也使用环境变量作为默认值
       return {
-        modelProvider: 'openai',
-        modelName: '',
-        apiToken: ''
+        modelProvider: import.meta?.env?.VITE_AI_PROVIDER || 'moonshot',
+        modelName: import.meta?.env?.VITE_AI_MODEL || 'moonshot-v1-8k',
+        apiToken: import.meta?.env?.VITE_AI_API_TOKEN || ''
       };
     }
   },
