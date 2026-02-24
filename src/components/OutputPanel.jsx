@@ -10,7 +10,10 @@ function OutputPanel() {
   return (
     <div className="h-1/2 flex flex-col">
       <div className="px-4 py-3 border-b bg-gray-50">
-        <h2 className="text-sm font-semibold text-gray-700">结构化输出</h2>
+        <h2 className="text-sm font-semibold text-gray-700">整理后的内容</h2>
+        <p className="text-xs text-gray-500 mt-1">
+          基于本体结构整理，流畅易读
+        </p>
       </div>
 
       <div className="flex-1 p-4 overflow-auto">
@@ -85,7 +88,7 @@ function OutputPanel() {
 
         {!isLoading && !error && !currentOutput && (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center text-gray-400">
+            <div className="text-center text-gray-400 max-w-sm px-6">
               <svg
                 className="mx-auto h-12 w-12 mb-4"
                 fill="none"
@@ -99,7 +102,10 @@ function OutputPanel() {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <p>在左侧输入资讯内容，系统将自动整理并展示在这里</p>
+              <p className="text-sm mb-2">等待整理内容</p>
+              <p className="text-xs text-gray-500">
+                在左侧输入资讯，AI 将构建知识本体，并输出易读的整理内容
+              </p>
             </div>
           </div>
         )}
