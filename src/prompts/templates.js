@@ -87,29 +87,28 @@ export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构�
 {
   "nodes": [
     {
-      "id": "node-1",
-      "name": "概念名称",
+      "id": "concept-free-energy",  // 节点唯一标识符，使用kebab-case格式
+      "name": "自由能原理",
       "type": "THEORY_CONCEPT",  // 必须使用Meta Ontology定义的类型
       "layer": 1,
       "description": "清晰的概念定义",
       "properties": {
-        "entity_type": "THEORY_CONCEPT | ALGORITHM_METHOD | SYSTEM_MODEL | ARTIFACT_TOOL | PERSON_ORGANIZATION",
-        "domain": "DOM_COMPUTATION_FORMAL | DOM_COGNITIVE_COMPLEXITY | ...",
-        "definition": "如果是THEORY_CONCEPT，必须有定义",
-        "origin_domain": "概念来源领域"
+        "entity_type": "THEORY_CONCEPT",
+        "domain": "DOM_COGNITIVE_COMPLEXITY",
+        "definition": "如果是THEORY_CONCEPT，必须有定义"
       }
     }
   ],
   "edges": [
     {
       "id": "edge-1",
-      "source": "node-1",
-      "target": "node-2",
-      "relation": "is-a",  // 必须使用Meta Ontology定义的关系类型
-      "relation_type": "structural|logical|cognitive",
-      "description": "关系的详细说明",
-      "strength": "strong|medium|weak",
-      "cross_domain": false  // 如果是跨领域关系（如isomorphic-to），标记为true
+      "source": "concept-free-energy",  // ⚠️ 必须是nodes数组中实际存在的节点id
+      "target": "concept-entropy",      // ⚠️ 必须是nodes数组中实际存在的节点id
+      "relation": "isomorphic-to",      // 必须使用Meta Ontology定义的关系类型
+      "relation_type": "cognitive",
+      "description": "自由能原理与熵的结构同构关系",
+      "strength": "strong",
+      "cross_domain": true
     }
   ],
   "metadata": {
@@ -130,9 +129,31 @@ export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构�
 5. **可推理性**：支持逻辑推导和知识发现
 6. **领域归属**：每个节点必须标注所属的顶级领域（domain属性）
 7. **跨界灵感**：主动识别跨领域的结构同构关系（isomorphic-to）
+8. **边的完整性**：所有边的source和target必须引用实际存在的节点id，不能有悬空边
 
-# 注意事项
-- ID使用小写字母和连字符（如：concept-finance-market）
+# ⚠️ 重要约束
+
+## 节点ID规范
+- 使用kebab-case格式（如：concept-free-energy-principle）
+- 必须唯一且有意义
+- 不要使用 "auto", "manual", "node-1" 等通用名称
+
+## 边的source/target字段
+**关键**：边的source和target字段必须引用nodes数组中实际存在的节点id
+
+❌ 错误示例：
+{
+  "source": "auto",        // 这是错误的！"auto"不是节点ID
+  "target": "concept-xxx"
+}
+
+✅ 正确示例：
+{
+  "source": "concept-dynamic-ontology",  // 必须是nodes中存在的节点id
+  "target": "concept-human-in-the-loop"
+}
+
+## 其他注意事项
 - 节点type必须使用Meta Ontology定义的5种实体类型
 - 关系relation必须使用Meta Ontology定义的关系词汇
 - 优先识别系统性结构，而非罗列孤立概念
