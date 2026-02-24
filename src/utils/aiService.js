@@ -41,7 +41,7 @@ export class AIService {
   /**
    * 首次构建本体
    * @param {string} content - 用户输入的资讯内容
-   * @returns {Promise<Object>} 返回本体结构 { nodes: [], edges: [] }
+   * @returns {Promise<Object>} 返回本体结构 { ontology: {...}, usage: {...} }
    */
   async buildOntology(content) {
     if (!this.isConfigured()) {
@@ -53,13 +53,16 @@ export class AIService {
       const prompt = getPromptTemplate('build', { content });
 
       // 2. 调用AI API
-      const response = await this.callAI(prompt);
+      const result = await this.callAI(prompt);
 
       // 3. 解析返回的JSON
-      const ontology = this.parseOntologyResponse(response);
+      const ontology = this.parseOntologyResponse(result.content);
 
-      // 4. 返回本体数据
-      return ontology;
+      // 4. 返回本体数据和token使用情况
+      return {
+        ontology,
+        usage: result.usage
+      };
     } catch (error) {
       console.error('构建本体失败:', error);
       throw new Error(`构建本体失败: ${error.message}`);
@@ -70,7 +73,7 @@ export class AIService {
    * 更新已有本体
    * @param {string} content - 新的资讯内容
    * @param {Object} existingOntology - 现有的本体结构
-   * @returns {Promise<Object>} 返回更新后的本体结构和变更信息
+   * @returns {Promise<Object>} 返回更新后的本体结构、变更信息和token使用情况
    */
   async updateOntology(content, existingOntology) {
     if (!this.isConfigured()) {
@@ -82,13 +85,16 @@ export class AIService {
       const prompt = getPromptTemplate('update', { content, existingOntology });
 
       // 2. 调用AI API
-      const response = await this.callAI(prompt);
+      const result = await this.callAI(prompt);
 
       // 3. 解析返回的JSON
-      const result = this.parseUpdateResponse(response);
+      const parsed = this.parseUpdateResponse(result.content);
 
-      // 4. 返回新本体和变更信息
-      return result;
+      // 4. 返回新本体、变更信息和token使用情况
+      return {
+        ...parsed,
+        usage: result.usage
+      };
     } catch (error) {
       console.error('更新本体失败:', error);
       throw new Error(`更新本体失败: ${error.message}`);
@@ -99,7 +105,7 @@ export class AIService {
    * 基于本体整理内容
    * @param {string} content - 原始内容
    * @param {Object} ontology - 本体结构
-   * @returns {Promise<string>} 返回格式化后的Markdown内容
+   * @returns {Promise<Object>} 返回格式化后的Markdown内容和token使用情况
    */
   async formatContent(content, ontology) {
     if (!this.isConfigured()) {
@@ -111,10 +117,13 @@ export class AIService {
       const prompt = getPromptTemplate('format', { content, ontology });
 
       // 2. 调用AI API
-      const response = await this.callAI(prompt);
+      const result = await this.callAI(prompt);
 
-      // 3. 返回格式化内容
-      return response;
+      // 3. 返回格式化内容和token使用情况
+      return {
+        content: result.content,
+        usage: result.usage
+      };
     } catch (error) {
       console.error('格式化内容失败:', error);
       throw new Error(`格式化内容失败: ${error.message}`);
@@ -188,7 +197,10 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return {
+      content: data.choices[0].message.content,
+      usage: data.usage || null
+    };
   }
 
   /**
@@ -226,7 +238,10 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return {
+      content: data.choices[0].message.content,
+      usage: data.usage || null
+    };
   }
 
   /**
@@ -262,7 +277,10 @@ export class AIService {
     }
 
     const data = await response.json();
-    return data.content[0].text;
+    return {
+      content: data.content[0].text,
+      usage: data.usage || null
+    };
   }
 
   /**

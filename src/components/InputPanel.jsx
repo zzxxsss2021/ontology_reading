@@ -62,24 +62,28 @@ function InputPanel() {
         // 步骤2: 构建本体
         addProcessingStep({ name: '🧠 AI构建知识本体', status: 'running' });
         const ontologyStartTime = Date.now();
-        newOntology = await aiService.buildOntology(inputContent);
+        const buildResult = await aiService.buildOntology(inputContent);
+        newOntology = buildResult.ontology;
         const ontologyDuration = Date.now() - ontologyStartTime;
         updateProcessingStep(stepIndex, {
           status: 'completed',
           duration: ontologyDuration,
-          details: `生成 ${newOntology.nodes?.length || 0} 个概念节点，${newOntology.edges?.length || 0} 条关系`
+          details: `生成 ${newOntology.nodes?.length || 0} 个概念节点，${newOntology.edges?.length || 0} 条关系`,
+          tokens: buildResult.usage
         });
         stepIndex++;
 
         // 步骤3: 格式化内容
         addProcessingStep({ name: '📝 整理输出内容', status: 'running' });
         const formatStartTime = Date.now();
-        formattedContent = await aiService.formatContent(inputContent, newOntology);
+        const formatResult = await aiService.formatContent(inputContent, newOntology);
+        formattedContent = formatResult.content;
         const formatDuration = Date.now() - formatStartTime;
         updateProcessingStep(stepIndex, {
           status: 'completed',
           duration: formatDuration,
-          details: `生成 ${formattedContent.length} 字符`
+          details: `生成 ${formattedContent.length} 字符`,
+          tokens: formatResult.usage
         });
         stepIndex++;
 
@@ -99,25 +103,28 @@ function InputPanel() {
         // 步骤2: 更新本体
         addProcessingStep({ name: '🔄 AI更新知识本体', status: 'running' });
         const updateStartTime = Date.now();
-        const result = await aiService.updateOntology(inputContent, ontology);
-        newOntology = result.ontology;
+        const updateResult = await aiService.updateOntology(inputContent, ontology);
+        newOntology = updateResult.ontology;
         const updateDuration = Date.now() - updateStartTime;
         updateProcessingStep(stepIndex, {
           status: 'completed',
           duration: updateDuration,
-          details: `新增 ${result.changes?.added_nodes?.length || 0} 个节点，${result.changes?.added_edges?.length || 0} 条关系`
+          details: `新增 ${updateResult.changes?.added_nodes?.length || 0} 个节点，${updateResult.changes?.added_edges?.length || 0} 条关系`,
+          tokens: updateResult.usage
         });
         stepIndex++;
 
         // 步骤3: 格式化内容
         addProcessingStep({ name: '📝 整理输出内容', status: 'running' });
         const formatStartTime = Date.now();
-        formattedContent = await aiService.formatContent(inputContent, newOntology);
+        const formatResult = await aiService.formatContent(inputContent, newOntology);
+        formattedContent = formatResult.content;
         const formatDuration = Date.now() - formatStartTime;
         updateProcessingStep(stepIndex, {
           status: 'completed',
           duration: formatDuration,
-          details: `生成 ${formattedContent.length} 字符`
+          details: `生成 ${formattedContent.length} 字符`,
+          tokens: formatResult.usage
         });
         stepIndex++;
 
@@ -130,18 +137,13 @@ function InputPanel() {
           output: formattedContent,
           ontology_version: newOntology.version,
           type: 'update',
-          changes: result.changes
+          changes: updateResult.changes
         });
         updateProcessingStep(stepIndex, { status: 'completed', duration: 0 });
       }
 
       setLoading(false);
       setInputContent('');
-
-      // 3秒后自动隐藏进度
-      setTimeout(() => {
-        setShowProgress(false);
-      }, 3000);
 
     } catch (error) {
       console.error('AI处理失败:', error);
