@@ -65,6 +65,26 @@ function SettingsModal({ isOpen, onClose }) {
     }
   };
 
+  // 使用环境变量配置
+  const handleUseEnvConfig = () => {
+    const envConfig = {
+      modelProvider: import.meta.env.VITE_AI_PROVIDER || 'moonshot',
+      modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
+      apiToken: import.meta.env.VITE_AI_API_TOKEN || ''
+    };
+
+    // 更新表单显示
+    setFormData(envConfig);
+
+    // 清除 localStorage 中的设置，强制使用环境变量
+    localStorage.removeItem('ontology_reading_settings');
+
+    // 更新到 store
+    updateSettings(envConfig);
+
+    alert('已切换到环境变量配置！\n\n提供商: ' + envConfig.modelProvider + '\n模型: ' + envConfig.modelName);
+  };
+
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
@@ -164,6 +184,22 @@ function SettingsModal({ isOpen, onClose }) {
                     您的 Token 将安全地存储在本地浏览器中
                   </p>
                 </div>
+
+                {/* 使用环境变量配置按钮 */}
+                {envConfigured && (
+                  <div className="pt-2">
+                    <button
+                      onClick={handleUseEnvConfig}
+                      className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md flex items-center justify-center gap-2"
+                    >
+                      <CheckCircleIcon className="h-5 w-5" />
+                      使用环境变量配置（推荐）
+                    </button>
+                    <p className="mt-2 text-xs text-gray-500 text-center">
+                      点击此按钮将自动加载 .env.local 中的配置
+                    </p>
+                  </div>
+                )}
 
                 {/* 配置提示 */}
                 {!envConfigured && !formData.apiToken && (
