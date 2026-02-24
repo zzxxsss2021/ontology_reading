@@ -6,13 +6,29 @@ import { getPromptTemplate } from '../prompts/templates.js';
 
 export class AIService {
   constructor(config) {
-    // 优先使用传入的配置，其次使用环境变量
-    this.config = config || {
+    // 环境变量默认值
+    const envDefaults = {
       provider: import.meta.env.VITE_AI_PROVIDER || 'moonshot',
       modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
       apiToken: import.meta.env.VITE_AI_API_TOKEN || '',
       apiEndpoint: import.meta.env.VITE_AI_API_ENDPOINT || 'https://api.moonshot.cn/v1/chat/completions'
     };
+
+    // 合并配置：传入的config优先，但空值使用环境变量填补
+    this.config = {
+      provider: config?.provider || config?.modelProvider || envDefaults.provider,
+      modelName: config?.modelName || envDefaults.modelName,
+      apiToken: config?.apiToken || envDefaults.apiToken,
+      apiEndpoint: config?.apiEndpoint || envDefaults.apiEndpoint
+    };
+
+    // 调试日志
+    console.log('AIService初始化配置:', {
+      provider: this.config.provider,
+      modelName: this.config.modelName,
+      hasToken: !!this.config.apiToken,
+      endpoint: this.config.apiEndpoint
+    });
   }
 
   /**
