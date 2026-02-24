@@ -82,19 +82,27 @@ export const storage = {
   // 设置相关
   getSettings() {
     try {
-      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-
-      // 如果localStorage有数据，使用保存的设置
-      if (data) {
-        return JSON.parse(data);
-      }
-
-      // 否则从环境变量读取默认配置
-      return {
+      // 环境变量默认值
+      const envDefaults = {
         modelProvider: import.meta?.env?.VITE_AI_PROVIDER || 'moonshot',
         modelName: import.meta?.env?.VITE_AI_MODEL || 'moonshot-v1-8k',
         apiToken: import.meta?.env?.VITE_AI_API_TOKEN || ''
       };
+
+      const data = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+
+      if (data) {
+        const saved = JSON.parse(data);
+        // 合并保存的设置和环境变量，环境变量作为后备
+        return {
+          modelProvider: saved.modelProvider || envDefaults.modelProvider,
+          modelName: saved.modelName || envDefaults.modelName,
+          apiToken: saved.apiToken || envDefaults.apiToken
+        };
+      }
+
+      // localStorage为空时，使用环境变量
+      return envDefaults;
     } catch (error) {
       console.error('Failed to load settings from localStorage:', error);
       // 错误时也使用环境变量作为默认值

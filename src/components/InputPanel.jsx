@@ -28,6 +28,14 @@ function InputPanel() {
       setLoading(true);
       setError(null);
 
+      // 打印调试信息
+      console.log('当前设置:', settings);
+      console.log('环境变量:', {
+        provider: import.meta.env.VITE_AI_PROVIDER,
+        model: import.meta.env.VITE_AI_MODEL,
+        hasToken: !!import.meta.env.VITE_AI_API_TOKEN
+      });
+
       // 获取AI服务实例
       const aiService = getAIService(settings);
 
