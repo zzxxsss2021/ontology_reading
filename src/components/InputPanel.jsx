@@ -28,16 +28,24 @@ function InputPanel() {
       setLoading(true);
       setError(null);
 
+      // 确保配置有效，优先使用环境变量
+      const effectiveSettings = {
+        modelProvider: settings?.modelProvider || import.meta.env.VITE_AI_PROVIDER || 'moonshot',
+        modelName: settings?.modelName || import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
+        apiToken: settings?.apiToken || import.meta.env.VITE_AI_API_TOKEN || ''
+      };
+
       // 打印调试信息
-      console.log('当前设置:', settings);
+      console.log('原始设置:', settings);
+      console.log('有效配置:', effectiveSettings);
       console.log('环境变量:', {
         provider: import.meta.env.VITE_AI_PROVIDER,
         model: import.meta.env.VITE_AI_MODEL,
         hasToken: !!import.meta.env.VITE_AI_API_TOKEN
       });
 
-      // 获取AI服务实例
-      const aiService = getAIService(settings);
+      // 获取AI服务实例，使用有效配置
+      const aiService = getAIService(effectiveSettings);
 
       // 检查AI是否配置
       if (!aiService.isConfigured()) {
