@@ -1,118 +1,250 @@
 /**
- * AI Prompt 模板
- *
- * TODO: 待AI集成时完善和优化
+ * AI Prompt 模板 - 基于本体论（Ontology）和知识图谱最佳实践
  */
 
 /**
  * 首次本体构建的Prompt模板
  */
-export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体构建专家，擅长从文本中提取核心概念和关系。
+export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构建专家，精通图数据库、知识图谱和语义网技术。
 
-用户输入的资讯内容：
+# 任务目标
+从用户提供的资讯内容中，构建一个结构化的知识本体。
+
+# 本体论核心原则
+
+## 1. 层次性（Hierarchical Structure）
+- 识别不同**抽象层次**的概念
+- 从具体到抽象组织概念
+- 建立上下位关系（Classes 和 Subclasses）
+
+示例层次：
+- 第一层：具体实体/行为体（Who/What）
+- 第二层：互动关系/过程（How）
+- 第三层：系统/场域（Where）
+- 第四层：状态/指标（Status）
+- 第五层：趋势/规律（Why/Future）
+
+## 2. 语义丰富性（Semantic Richness）
+关系不应仅是"关联"，而应使用**明确的语义动词**：
+
+### 结构关系
+- is-a（是一个）：类别归属
+- part-of（部分-整体）：组成关系
+- has-a（拥有）：属性关系
+
+### 行为关系
+- produces（产生）
+- influences（影响）
+- triggers（触发）
+- transforms（转化）
+- regulates（调节）
+
+### 时空关系
+- occurs-in（发生于）
+- precedes（先于）
+- follows（后于）
+- co-occurs（共现）
+
+### 逻辑关系
+- causes（导致）
+- enables（使能）
+- constrains（约束）
+- contradicts（矛盾）
+
+## 3. 系统性（Systemic View）
+- 识别**反馈循环**
+- 构建**闭环系统**
+- 体现**涌现特性**
+
+# 用户输入内容
 {content}
 
-任务：
-1. 识别文本中的核心概念（实体、术语、关键词）
-2. 识别概念之间的关系
-3. 以 JSON 格式输出本体结构
+# 输出格式（严格JSON）
 
-输出格式（严格遵守JSON格式，不要有额外说明）：
 {
   "nodes": [
     {
-      "id": "唯一ID（小写字母和连字符）",
+      "id": "node-1",
       "name": "概念名称",
-      "type": "类型（architecture/mechanism/model/component/concept）",
-      "description": "简短描述"
+      "type": "concept_type",
+      "layer": 1,
+      "description": "清晰的概念定义",
+      "properties": {
+        "abstract_level": "concrete|intermediate|abstract",
+        "domain": "领域标签"
+      }
     }
   ],
   "edges": [
     {
-      "id": "唯一ID",
-      "source": "源节点ID",
-      "target": "目标节点ID",
-      "relation": "关系类型（包含/属于/基于/导致/关联等）",
-      "description": "关系描述"
+      "id": "edge-1",
+      "source": "node-1",
+      "target": "node-2",
+      "relation": "具体语义动词",
+      "relation_type": "structural|behavioral|temporal|logical",
+      "description": "关系的详细说明",
+      "strength": "strong|medium|weak"
     }
-  ]
+  ],
+  "metadata": {
+    "layers": ["第一层描述", "第二层描述", ...],
+    "core_concepts": ["核心概念1", "核心概念2"],
+    "system_loops": ["识别到的反馈循环描述"]
+  }
 }
 
-注意事项：
-- 保持概念精简（5-15个核心概念）
-- 关系要有明确语义
-- 所有ID使用小写字母和连字符格式，如：transformer-1
-- 只返回JSON，不要其他文本`;
+# 质量要求
+
+1. **概念数量**：5-20个核心概念（避免过度细分）
+2. **层次清晰**：至少2-3个抽象层次
+3. **关系明确**：每个关系必须有清晰的语义
+4. **系统完整**：体现概念间的相互作用
+5. **可推理性**：支持逻辑推导和知识发现
+
+# 注意事项
+- ID使用小写字母和连字符（如：concept-finance-market）
+- 关系动词使用中文，简洁有力
+- 优先识别系统性结构，而非罗列孤立概念
+- 只返回JSON，不要其他说明文字`;
 
 /**
  * 本体更新的Prompt模板
  */
 export const UPDATE_ONTOLOGY_PROMPT = `你是一个知识本体融合专家，擅长将新知识整合到现有本体中。
 
-现有本体结构：
+# 现有本体结构
 {existingOntology}
 
-新输入的资讯内容：
+# 新输入的资讯内容
 {content}
 
-任务：
-1. 分析新内容与现有本体的关联
-2. 识别需要新增的概念和关系
-3. 识别需要删除或修改的概念（如果有）
-4. 生成更新后的完整本体
+# 融合任务
 
-输出格式（严格遵守JSON格式）：
+## 1. 分析关联
+- 识别新内容与现有本体的**语义关联**
+- 判断新概念所属的**抽象层次**
+- 发现**跨层次的关系**
+
+## 2. 概念处理
+
+### 新增概念
+- 确定在本体层次中的位置
+- 建立与现有概念的关系
+- 补充系统性连接
+
+### 现有概念
+- 丰富概念定义
+- 增强概念属性
+- 发现新的关系
+
+### 冗余概念
+- 识别语义重复
+- 进行概念合并
+- 保持本体简洁
+
+## 3. 关系优化
+- 识别**隐含关系**（基于现有关系推导）
+- 发现**反馈循环**
+- 强化**系统闭环**
+
+# 输出格式（严格JSON）
+
 {
-  "nodes": [...完整的节点列表...],
-  "edges": [...完整的边列表...],
+  "nodes": [...完整的节点列表，包含新旧节点...],
+  "edges": [...完整的边列表，包含新旧关系...],
+  "metadata": {
+    "layers": [...],
+    "core_concepts": [...],
+    "system_loops": [...]
+  },
   "changes": {
     "added_nodes": ["新增节点ID1", "新增节点ID2"],
-    "added_edges": ["新增边ID1"],
-    "removed_nodes": ["删除节点ID（如有）"],
-    "removed_edges": ["删除边ID（如有）"],
-    "modified_nodes": ["修改节点ID（如有）"]
+    "added_edges": ["新增边ID1", "新增边ID2"],
+    "removed_nodes": ["移除的冗余节点ID（如有）"],
+    "removed_edges": ["移除的冗余关系ID（如有）"],
+    "modified_nodes": ["修改的节点ID（如有）"],
+    "insights": [
+      "发现的新系统性关联1",
+      "发现的新反馈循环2"
+    ]
   }
 }
 
-注意事项：
-- 保留所有现有的有效概念
-- 合理融合新旧知识
-- 避免重复概念
-- 只返回JSON，不要其他文本`;
+# 融合原则
+1. **保持一致性**：新概念融入现有层次结构
+2. **增强系统性**：发现跨概念的系统关联
+3. **避免冗余**：合并语义重复的概念
+4. **丰富语义**：使用更精确的关系动词
+5. **可追溯性**：在changes中清晰说明变更
+
+只返回JSON，不要其他文字。`;
 
 /**
  * 内容整理的Prompt模板
  */
-export const FORMAT_CONTENT_PROMPT = `你是一个内容整理专家，基于本体结构组织和呈现信息。
+export const FORMAT_CONTENT_PROMPT = `你是一个基于本体的内容结构化专家。
 
-本体结构：
+# 本体结构
 {ontology}
 
-原始资讯内容：
+# 原始资讯内容
 {content}
 
-任务：
-1. 基于本体结构重新组织内容
-2. 使用 Markdown 格式输出
-3. 高亮核心概念（用[]括起来）
-4. 说明概念间的关系
+# 任务目标
+基于本体的**层次结构**和**语义关系**，重新组织和呈现内容。
 
-输出格式：
-## 核心概念
-- **[概念1]** (类型): 描述
-- **[概念2]** (类型): 描述
+# 输出格式（Markdown）
 
-## 概念关系
-- [概念1] --关系--> [概念2]
-- [概念A] --关系--> [概念B]
+## 🎯 核心洞察
+[基于本体的系统性总结，3-5句话]
 
-## 内容摘要
-基于本体的结构化内容说明...
+## 📊 概念图谱
 
-注意事项：
-- 所有概念名称用[]括起来
-- 保持内容简洁清晰
-- 突出重点和关联`;
+### 第一层：[层次名称]
+- **[概念1]** ([类型]): 定义
+- **[概念2]** ([类型]): 定义
+
+### 第二层：[层次名称]
+- **[概念3]** ([类型]): 定义
+
+[...继续其他层次...]
+
+## 🔗 关键关系网络
+
+### 结构关系
+- [概念A] --包含--> [概念B]
+- [概念C] --属于--> [概念D]
+
+### 行为关系
+- [概念E] --产生--> [概念F]
+- [概念G] --影响--> [概念H]
+
+### 系统循环
+- [概念I] → [概念J] → [概念K] → [概念I] (形成闭环)
+
+## 💡 系统性理解
+
+### 层次递进
+[说明从具体到抽象的递进逻辑]
+
+### 因果链条
+[说明核心因果关系]
+
+### 反馈机制
+[说明识别到的反馈循环及其意义]
+
+## 📝 详细阐述
+[基于本体结构，详细展开原始内容，保持层次清晰]
+
+---
+
+# 格式要求
+1. 所有概念用 **[概念名]** 标记
+2. 关系使用语义化动词（不要用"关联"）
+3. 突出**系统性**和**层次性**
+4. 体现本体的**结构美感**
+
+只返回Markdown内容，不要JSON。`;
 
 /**
  * 获取Prompt模板
@@ -136,7 +268,9 @@ export function getPromptTemplate(type, params) {
     case 'format':
       template = FORMAT_CONTENT_PROMPT;
       if (params.ontology) {
-        params.ontology = JSON.stringify(params.ontology, null, 2);
+        // 提取本体的层次和结构信息
+        const ontologyStr = JSON.stringify(params.ontology, null, 2);
+        params.ontology = ontologyStr;
       }
       break;
     default:

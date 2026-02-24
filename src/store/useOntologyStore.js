@@ -47,9 +47,9 @@ const useOntologyStore = create((set, get) => ({
     const savedSettings = storage.getSettings();
 
     set({
-      ontology: savedOntology || sampleOntology, // 如果没有保存的数据，使用示例数据
+      ontology: savedOntology || null, // 初始为空，等待用户首次输入
       contentHistory: savedHistory,
-      currentOutput: savedOntology ? '' : sampleOutput, // 如果使用示例数据，显示示例输出
+      currentOutput: '', // 初始输出为空
       settings: savedSettings
     });
   },
