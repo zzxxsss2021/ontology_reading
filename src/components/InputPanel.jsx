@@ -60,7 +60,12 @@ function InputPanel() {
 
       if (isFirstTime) {
         // 步骤2: 构建本体
-        addProcessingStep({ name: '🧠 AI构建知识本体', status: 'running' });
+        const buildPrompt = aiService.getLastPrompt('build', inputContent);
+        addProcessingStep({
+          name: '🧠 AI构建知识本体',
+          status: 'running',
+          prompt: buildPrompt
+        });
         const ontologyStartTime = Date.now();
         const buildResult = await aiService.buildOntology(inputContent);
         newOntology = buildResult.ontology;
@@ -74,7 +79,12 @@ function InputPanel() {
         stepIndex++;
 
         // 步骤3: 格式化内容
-        addProcessingStep({ name: '📝 整理输出内容', status: 'running' });
+        const formatPrompt = aiService.getLastPrompt('format', inputContent, newOntology);
+        addProcessingStep({
+          name: '📝 整理输出内容',
+          status: 'running',
+          prompt: formatPrompt
+        });
         const formatStartTime = Date.now();
         const formatResult = await aiService.formatContent(inputContent, newOntology);
         formattedContent = formatResult.content;
@@ -115,7 +125,12 @@ function InputPanel() {
         stepIndex++;
 
         // 步骤3: 格式化内容
-        addProcessingStep({ name: '📝 整理输出内容', status: 'running' });
+        const formatPrompt2 = aiService.getLastPrompt('format', inputContent, newOntology);
+        addProcessingStep({
+          name: '📝 整理输出内容',
+          status: 'running',
+          prompt: formatPrompt2
+        });
         const formatStartTime = Date.now();
         const formatResult = await aiService.formatContent(inputContent, newOntology);
         formattedContent = formatResult.content;

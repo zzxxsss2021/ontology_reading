@@ -8,6 +8,7 @@ import useOntologyStore from '../store/useOntologyStore';
 function OutputPanel() {
   const { currentOutput, error, isLoading, processingSteps } = useOntologyStore();
   const [showProgress, setShowProgress] = useState(true);
+  const [expandedPrompts, setExpandedPrompts] = useState({});
 
   return (
     <div className="h-1/2 flex flex-col">
@@ -93,6 +94,34 @@ function OutputPanel() {
                       )}
                       {step.error && (
                         <p className="text-xs text-red-500 mt-0.5">{step.error}</p>
+                      )}
+                      {step.prompt && (
+                        <div className="mt-2">
+                          <button
+                            onClick={() => setExpandedPrompts(prev => ({
+                              ...prev,
+                              [index]: !prev[index]
+                            }))}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                          >
+                            {expandedPrompts[index] ? '收起' : '查看'} 输入内容
+                            <svg
+                              className={`h-3 w-3 transition-transform ${expandedPrompts[index] ? 'rotate-180' : ''}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          {expandedPrompts[index] && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded border border-gray-200 max-h-60 overflow-y-auto">
+                              <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+                                {step.prompt}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

@@ -370,6 +370,28 @@ export class AIService {
   }
 
   /**
+   * 获取Prompt内容（用于显示给用户查看）
+   * @param {string} type - 'build' | 'update' | 'format'
+   * @param {string} content - 用户输入内容
+   * @param {Object} ontology - 本体数据（可选）
+   */
+  getLastPrompt(type, content, ontology) {
+    try {
+      if (type === 'build') {
+        return getPromptTemplate('build', { content });
+      } else if (type === 'update') {
+        return getPromptTemplate('update', { content, existingOntology: ontology });
+      } else if (type === 'format') {
+        return getPromptTemplate('format', { content, ontology });
+      }
+      return '';
+    } catch (error) {
+      console.error('获取Prompt失败:', error);
+      return '';
+    }
+  }
+
+  /**
    * 更新配置
    */
   updateConfig(newConfig) {
