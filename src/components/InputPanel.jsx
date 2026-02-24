@@ -40,7 +40,7 @@ function InputPanel() {
       addProcessingStep({ name: '初始化配置', status: 'running' });
       const effectiveSettings = {
         modelProvider: settings?.modelProvider || import.meta.env.VITE_AI_PROVIDER || 'moonshot',
-        modelName: settings?.modelName || import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
+        modelName: settings?.modelName || import.meta.env.VITE_AI_MODEL || 'moonshot-v1-128k',
         apiToken: settings?.apiToken || import.meta.env.VITE_AI_API_TOKEN || ''
       };
       const aiService = getAIService(effectiveSettings);

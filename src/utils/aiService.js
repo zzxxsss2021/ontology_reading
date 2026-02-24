@@ -9,7 +9,7 @@ export class AIService {
     // 环境变量默认值
     const envDefaults = {
       provider: import.meta.env.VITE_AI_PROVIDER || 'moonshot',
-      modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
+      modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-128k',
       apiToken: import.meta.env.VITE_AI_API_TOKEN || '',
       apiEndpoint: import.meta.env.VITE_AI_API_ENDPOINT || 'https://api.moonshot.cn/v1/chat/completions'
     };

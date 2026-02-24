@@ -69,7 +69,7 @@ function SettingsModal({ isOpen, onClose }) {
   const handleUseEnvConfig = () => {
     const envConfig = {
       modelProvider: import.meta.env.VITE_AI_PROVIDER || 'moonshot',
-      modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
+      modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-128k',
       apiToken: import.meta.env.VITE_AI_API_TOKEN || ''
     };
 
@@ -117,7 +117,7 @@ function SettingsModal({ isOpen, onClose }) {
                   </p>
                   <p className="text-xs text-green-700 mt-1">
                     提供商: {import.meta.env.VITE_AI_PROVIDER || 'moonshot'} |
-                    模型: {import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k'}
+                    模型: {import.meta.env.VITE_AI_MODEL || 'moonshot-v1-128k'}
                   </p>
                 </div>
               </div>
@@ -158,7 +158,7 @@ function SettingsModal({ isOpen, onClose }) {
                     }
                     placeholder={
                       formData.modelProvider === 'moonshot'
-                        ? '例如: moonshot-v1-8k, moonshot-v1-32k'
+                        ? '例如: moonshot-v1-128k, moonshot-v1-32k'
                         : formData.modelProvider === 'openai'
                         ? '例如: gpt-4o, gpt-4-turbo'
                         : '例如: claude-opus-4-6, claude-sonnet-4-5'
@@ -212,7 +212,7 @@ function SettingsModal({ isOpen, onClose }) {
                     </p>
                     <pre className="text-xs mt-2 p-2 bg-white rounded border border-blue-200 overflow-x-auto">
 {`VITE_AI_PROVIDER=moonshot
-VITE_AI_MODEL=moonshot-v1-8k
+VITE_AI_MODEL=moonshot-v1-128k
 VITE_AI_API_TOKEN=your_token_here`}
                     </pre>
                   </div>
@@ -279,7 +279,7 @@ VITE_AI_API_TOKEN=your_token_here`}
                   当前支持的 AI 模型：
                 </p>
                 <ul className="text-gray-500 list-disc list-inside pl-2">
-                  <li>Moonshot (Kimi) - moonshot-v1-8k/32k/128k</li>
+                  <li>Moonshot (Kimi) - moonshot-v1-128k/32k/128k</li>
                   <li>OpenAI - gpt-4/gpt-4o/gpt-4-turbo</li>
                   <li>Anthropic - claude-opus/sonnet</li>
                 </ul>
