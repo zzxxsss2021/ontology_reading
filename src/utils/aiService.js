@@ -284,6 +284,23 @@ export class AIService {
         throw new Error('返回的本体数据缺少edges字段');
       }
 
+      // 创建节点ID集合
+      const nodeIds = new Set(ontology.nodes.map(n => n.id));
+
+      // 过滤掉引用不存在节点的边
+      const validEdges = ontology.edges.filter(edge => {
+        const isValid = nodeIds.has(edge.source) && nodeIds.has(edge.target);
+        if (!isValid) {
+          console.warn(`移除无效边: ${edge.id} (${edge.source} -> ${edge.target})`);
+        }
+        return isValid;
+      });
+
+      const invalidEdgeCount = ontology.edges.length - validEdges.length;
+      if (invalidEdgeCount > 0) {
+        console.warn(`已自动移除 ${invalidEdgeCount} 条无效边`);
+      }
+
       // 添加时间戳和版本
       return {
         version: 1,
@@ -293,7 +310,7 @@ export class AIService {
           ...node,
           source: 'auto'
         })),
-        edges: ontology.edges.map(edge => ({
+        edges: validEdges.map(edge => ({
           ...edge,
           source: 'auto'
         }))
