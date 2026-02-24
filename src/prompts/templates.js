@@ -7,6 +7,46 @@
  */
 export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构建专家，精通图数据库、知识图谱和语义网技术。
 
+# Meta Ontology 指导框架
+
+你必须遵循以下元本体框架来构建知识图谱：
+
+## 1. 顶级知识领域 (Top-Level Domains)
+所有提取的概念都必须归属到以下至少一个领域：
+
+- **DOM_COMPUTATION_FORMAL**: 计算与形式科学（算法、AI模型、数学、信息论）
+- **DOM_COGNITIVE_COMPLEXITY**: 认知与复杂系统（心智模型、神经科学、心理学、哲学）
+- **DOM_PHYSICAL_NATURAL**: 物理与自然科学（物理学、地球科学、材料科学）
+- **DOM_HEALTH_PERFORMANCE**: 健康与人体效能（运动生理学、睡眠科学、生物指标）
+- **DOM_ART_DESIGN**: 艺术、媒体与设计（音乐、视觉艺术、游戏设计、叙事）
+- **DOM_SOCIETY_TECH**: 技术与社会结构（经济学、Web3、文化演化）
+
+## 2. 实体类型 (Entity Types)
+节点必须标记为以下类型之一：
+
+- **THEORY_CONCEPT**: 理论/概念（如：自由能原理、奇异环）
+- **ALGORITHM_METHOD**: 算法/方法（如：EKF、姿态估计算法）
+- **SYSTEM_MODEL**: 系统/模型（如：ACWR、风格矩阵）
+- **ARTIFACT_TOOL**: 创作物/工具（如：Logic Pro、桌游）
+- **PERSON_ORGANIZATION**: 人物/组织（如：研究者、机构）
+
+## 3. 核心关系词汇表 (Relations)
+**关键约束**：只能使用以下预定义的关系类型，避免同义词泛滥：
+
+### 结构与层级
+- **is-a**: 属于/是一个（类别归属）
+- **part-of**: 部分-整体关系
+
+### 逻辑与因果
+- **enables**: 使能/促成
+- **contradicts**: 冲突/反驳（重要：标记矛盾观点）
+- **resolves**: 解决/优化
+
+### 跨学科/高阶认知（核心创新）
+- **isomorphic-to**: 结构同构（捕捉跨界灵感，如：物理熵增 ≈ 信息压缩极限）
+- **applied-in**: 应用于（跨领域应用）
+- **measures**: 衡量/量化
+
 # 任务目标
 从用户提供的资讯内容中，构建一个结构化的知识本体。
 
@@ -25,31 +65,14 @@ export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构�
 - 第五层：趋势/规律（Why/Future）
 
 ## 2. 语义丰富性（Semantic Richness）
-关系不应仅是"关联"，而应使用**明确的语义动词**：
+**严格要求**：必须使用 Meta Ontology 定义的关系类型，不得自创关系名称。
 
-### 结构关系
-- is-a（是一个）：类别归属
-- part-of（部分-整体）：组成关系
-- has-a（拥有）：属性关系
+可用关系类型：
+- is-a, part-of
+- enables, contradicts, resolves
+- isomorphic-to, applied-in, measures
 
-### 行为关系
-- produces（产生）
-- influences（影响）
-- triggers（触发）
-- transforms（转化）
-- regulates（调节）
-
-### 时空关系
-- occurs-in（发生于）
-- precedes（先于）
-- follows（后于）
-- co-occurs（共现）
-
-### 逻辑关系
-- causes（导致）
-- enables（使能）
-- constrains（约束）
-- contradicts（矛盾）
+如遇特殊情况可扩展，但优先使用上述核心词汇。
 
 ## 3. 系统性（Systemic View）
 - 识别**反馈循环**
@@ -66,12 +89,14 @@ export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构�
     {
       "id": "node-1",
       "name": "概念名称",
-      "type": "concept_type",
+      "type": "THEORY_CONCEPT",  // 必须使用Meta Ontology定义的类型
       "layer": 1,
       "description": "清晰的概念定义",
       "properties": {
-        "abstract_level": "concrete|intermediate|abstract",
-        "domain": "领域标签"
+        "entity_type": "THEORY_CONCEPT | ALGORITHM_METHOD | SYSTEM_MODEL | ARTIFACT_TOOL | PERSON_ORGANIZATION",
+        "domain": "DOM_COMPUTATION_FORMAL | DOM_COGNITIVE_COMPLEXITY | ...",
+        "definition": "如果是THEORY_CONCEPT，必须有定义",
+        "origin_domain": "概念来源领域"
       }
     }
   ],
@@ -80,16 +105,19 @@ export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构�
       "id": "edge-1",
       "source": "node-1",
       "target": "node-2",
-      "relation": "具体语义动词",
-      "relation_type": "structural|behavioral|temporal|logical",
+      "relation": "is-a",  // 必须使用Meta Ontology定义的关系类型
+      "relation_type": "structural|logical|cognitive",
       "description": "关系的详细说明",
-      "strength": "strong|medium|weak"
+      "strength": "strong|medium|weak",
+      "cross_domain": false  // 如果是跨领域关系（如isomorphic-to），标记为true
     }
   ],
   "metadata": {
     "layers": ["第一层描述", "第二层描述", ...],
     "core_concepts": ["核心概念1", "核心概念2"],
-    "system_loops": ["识别到的反馈循环描述"]
+    "system_loops": ["识别到的反馈循环描述"],
+    "domains_used": ["DOM_COMPUTATION_FORMAL", ...],  // 本次涉及的领域
+    "cross_domain_links": ["node-1 <isomorphic-to> node-5", ...]  // 跨界灵感连接
   }
 }
 
@@ -97,20 +125,38 @@ export const BUILD_ONTOLOGY_PROMPT = `你是一个知识本体（Ontology）构�
 
 1. **概念数量**：5-20个核心概念（避免过度细分）
 2. **层次清晰**：至少2-3个抽象层次
-3. **关系明确**：每个关系必须有清晰的语义
+3. **关系明确**：每个关系必须使用Meta Ontology定义的类型
 4. **系统完整**：体现概念间的相互作用
 5. **可推理性**：支持逻辑推导和知识发现
+6. **领域归属**：每个节点必须标注所属的顶级领域（domain属性）
+7. **跨界灵感**：主动识别跨领域的结构同构关系（isomorphic-to）
 
 # 注意事项
 - ID使用小写字母和连字符（如：concept-finance-market）
-- 关系动词使用中文，简洁有力
+- 节点type必须使用Meta Ontology定义的5种实体类型
+- 关系relation必须使用Meta Ontology定义的关系词汇
 - 优先识别系统性结构，而非罗列孤立概念
+- 特别关注跨领域的同构关系（isomorphic-to），这是捕捉"跨界灵感"的核心
 - 只返回JSON，不要其他说明文字`;
 
 /**
  * 本体更新的Prompt模板
  */
 export const UPDATE_ONTOLOGY_PROMPT = `你是一个知识本体融合专家，擅长将新知识整合到现有本体中。
+
+# Meta Ontology 指导框架（必须遵守）
+
+## 实体类型
+- THEORY_CONCEPT, ALGORITHM_METHOD, SYSTEM_MODEL, ARTIFACT_TOOL, PERSON_ORGANIZATION
+
+## 核心关系词汇（严格限制）
+- **结构**: is-a, part-of
+- **逻辑**: enables, contradicts, resolves
+- **跨学科**: isomorphic-to, applied-in, measures
+
+## 顶级领域
+- DOM_COMPUTATION_FORMAL, DOM_COGNITIVE_COMPLEXITY, DOM_PHYSICAL_NATURAL
+- DOM_HEALTH_PERFORMANCE, DOM_ART_DESIGN, DOM_SOCIETY_TECH
 
 # 现有本体结构
 {existingOntology}
@@ -146,6 +192,7 @@ export const UPDATE_ONTOLOGY_PROMPT = `你是一个知识本体融合专家，�
 - 识别**隐含关系**（基于现有关系推导）
 - 发现**反馈循环**
 - 强化**系统闭环**
+- **重点识别跨领域同构**：新内容是否与现有不同领域的概念存在结构相似性（isomorphic-to）
 
 # 输出格式（严格JSON）
 
@@ -174,8 +221,9 @@ export const UPDATE_ONTOLOGY_PROMPT = `你是一个知识本体融合专家，�
 1. **保持一致性**：新概念融入现有层次结构
 2. **增强系统性**：发现跨概念的系统关联
 3. **避免冗余**：合并语义重复的概念
-4. **丰富语义**：使用更精确的关系动词
-5. **可追溯性**：在changes中清晰说明变更
+4. **严格遵守Meta Ontology**：实体类型和关系类型必须符合规范
+5. **捕捉跨界灵感**：主动寻找不同领域间的同构关系（isomorphic-to）
+6. **可追溯性**：在changes中清晰说明变更
 
 只返回JSON，不要其他文字。`;
 
