@@ -4,6 +4,7 @@ import OntologyGraph from './components/OntologyGraph';
 import InputPanel from './components/InputPanel';
 import OutputPanel from './components/OutputPanel';
 import SettingsModal from './components/SettingsModal';
+import ProcessingProgress from './components/ProcessingProgress';
 import { Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 /**
@@ -70,6 +71,9 @@ function App() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
+
+      {/* Processing Progress Modal */}
+      <ProcessingProgress />
 
       {/* Footer (Optional) */}
       <footer className="h-8 border-t bg-gray-50 flex items-center justify-center text-xs text-gray-500">

@@ -3,6 +3,7 @@ import storage from '../utils/storage.js';
 import { sampleOntology, sampleOutput } from '../utils/mockData.js';
 import {
   generateId,
+  sanitizeOntology,
   validateOntology,
   createEmptyOntology,
   updateOntologyTimestamp,
@@ -35,6 +36,10 @@ const useOntologyStore = create((set, get) => ({
   // UI状态
   isLoading: false,
   error: null,
+
+  // 处理进度追踪
+  processingSteps: [],
+  showProgress: false,
 
   // ========== Actions ==========
 
@@ -76,15 +81,18 @@ const useOntologyStore = create((set, get) => ({
    * 保存本体
    */
   saveOntology: (ontology) => {
-    const validation = validateOntology(ontology);
+    // 先清理无效数据
+    const cleanedOntology = sanitizeOntology(ontology);
+
+    const validation = validateOntology(cleanedOntology);
     if (!validation.valid) {
       set({ error: validation.error });
       return false;
     }
 
-    const success = storage.saveOntology(ontology);
+    const success = storage.saveOntology(cleanedOntology);
     if (success) {
-      set({ ontology, error: null });
+      set({ ontology: cleanedOntology, error: null });
     } else {
       set({ error: '保存失败' });
     }
@@ -320,6 +328,43 @@ const useOntologyStore = create((set, get) => ({
    */
   clearError: () => {
     set({ error: null });
+  },
+
+  /**
+   * 添加处理步骤
+   */
+  addProcessingStep: (step) => {
+    set((state) => ({
+      processingSteps: [...state.processingSteps, {
+        ...step,
+        timestamp: Date.now()
+      }]
+    }));
+  },
+
+  /**
+   * 更新处理步骤状态
+   */
+  updateProcessingStep: (index, updates) => {
+    set((state) => ({
+      processingSteps: state.processingSteps.map((step, i) =>
+        i === index ? { ...step, ...updates, endTime: Date.now() } : step
+      )
+    }));
+  },
+
+  /**
+   * 清空处理步骤
+   */
+  clearProcessingSteps: () => {
+    set({ processingSteps: [], showProgress: false });
+  },
+
+  /**
+   * 设置进度显示状态
+   */
+  setShowProgress: (show) => {
+    set({ showProgress: show });
   }
 }));
 

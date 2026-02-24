@@ -15,7 +15,11 @@ function InputPanel() {
     setError,
     setCurrentOutput,
     addHistoryItem,
-    isLoading
+    isLoading,
+    addProcessingStep,
+    updateProcessingStep,
+    clearProcessingSteps,
+    setShowProgress
   } = useOntologyStore();
 
   const handleSubmit = async () => {
@@ -27,86 +31,100 @@ function InputPanel() {
     try {
       setLoading(true);
       setError(null);
+      clearProcessingSteps();
+      setShowProgress(true);
 
-      // 确保配置有效，优先使用环境变量
+      let stepIndex = 0;
+
+      // 步骤1: 初始化配置
+      addProcessingStep({ name: '初始化配置', status: 'running' });
       const effectiveSettings = {
         modelProvider: settings?.modelProvider || import.meta.env.VITE_AI_PROVIDER || 'moonshot',
         modelName: settings?.modelName || import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
         apiToken: settings?.apiToken || import.meta.env.VITE_AI_API_TOKEN || ''
       };
-
-      // 打印调试信息
-      console.log('原始设置:', settings);
-      console.log('有效配置:', effectiveSettings);
-      console.log('环境变量:', {
-        provider: import.meta.env.VITE_AI_PROVIDER,
-        model: import.meta.env.VITE_AI_MODEL,
-        hasToken: !!import.meta.env.VITE_AI_API_TOKEN
-      });
-
-      // 获取AI服务实例，使用有效配置
       const aiService = getAIService(effectiveSettings);
 
-      // 检查AI是否配置
       if (!aiService.isConfigured()) {
+        updateProcessingStep(stepIndex, { status: 'error', error: 'AI服务未配置' });
         setError('AI服务未配置。请先在设置中配置API Token和模型名称，或使用环境变量配置。');
         setLoading(false);
         return;
       }
+      updateProcessingStep(stepIndex, { status: 'completed' });
+      stepIndex++;
 
-      // 判断是首次构建还是更新本体
       const isFirstTime = !ontology || ontology.nodes.length === 0;
-
       let newOntology;
       let formattedContent;
 
       if (isFirstTime) {
-        console.log('首次构建本体...');
-
-        // 首次构建本体
+        // 步骤2: 构建本体
+        addProcessingStep({ name: '🧠 AI构建知识本体', status: 'running' });
+        const ontologyStartTime = Date.now();
         newOntology = await aiService.buildOntology(inputContent);
-        console.log('本体构建成功:', newOntology);
+        const ontologyDuration = Date.now() - ontologyStartTime;
+        updateProcessingStep(stepIndex, {
+          status: 'completed',
+          duration: ontologyDuration,
+          details: `生成 ${newOntology.nodes?.length || 0} 个概念节点，${newOntology.edges?.length || 0} 条关系`
+        });
+        stepIndex++;
 
-        // 基于本体格式化内容
+        // 步骤3: 格式化内容
+        addProcessingStep({ name: '📝 整理输出内容', status: 'running' });
+        const formatStartTime = Date.now();
         formattedContent = await aiService.formatContent(inputContent, newOntology);
-        console.log('内容格式化成功');
+        const formatDuration = Date.now() - formatStartTime;
+        updateProcessingStep(stepIndex, {
+          status: 'completed',
+          duration: formatDuration,
+          details: `生成 ${formattedContent.length} 字符`
+        });
+        stepIndex++;
 
-        // 保存新本体
+        // 步骤4: 保存数据
+        addProcessingStep({ name: '💾 保存到本地存储', status: 'running' });
         updateOntology(newOntology);
-
-        // 显示格式化后的内容
         setCurrentOutput(formattedContent);
-
-        // 添加历史记录
         addHistoryItem({
           input: inputContent,
           output: formattedContent,
           ontology_version: newOntology.version,
           type: 'build'
         });
+        updateProcessingStep(stepIndex, { status: 'completed', duration: 0 });
 
-        setLoading(false);
-        setInputContent('');
       } else {
-        console.log('更新已有本体...');
-
-        // 更新本体
+        // 步骤2: 更新本体
+        addProcessingStep({ name: '🔄 AI更新知识本体', status: 'running' });
+        const updateStartTime = Date.now();
         const result = await aiService.updateOntology(inputContent, ontology);
         newOntology = result.ontology;
-        console.log('本体更新成功:', newOntology);
+        const updateDuration = Date.now() - updateStartTime;
+        updateProcessingStep(stepIndex, {
+          status: 'completed',
+          duration: updateDuration,
+          details: `新增 ${result.changes?.added_nodes?.length || 0} 个节点，${result.changes?.added_edges?.length || 0} 条关系`
+        });
+        stepIndex++;
 
-        // 基于更新后的本体格式化内容
+        // 步骤3: 格式化内容
+        addProcessingStep({ name: '📝 整理输出内容', status: 'running' });
+        const formatStartTime = Date.now();
         formattedContent = await aiService.formatContent(inputContent, newOntology);
-        console.log('内容格式化成功');
+        const formatDuration = Date.now() - formatStartTime;
+        updateProcessingStep(stepIndex, {
+          status: 'completed',
+          duration: formatDuration,
+          details: `生成 ${formattedContent.length} 字符`
+        });
+        stepIndex++;
 
-        // TODO: 显示版本对比，让用户选择
-        // 当前简化版本：直接接受新本体
+        // 步骤4: 保存数据
+        addProcessingStep({ name: '💾 保存到本地存储', status: 'running' });
         updateOntology(newOntology);
-
-        // 显示格式化后的内容
         setCurrentOutput(formattedContent);
-
-        // 添加历史记录
         addHistoryItem({
           input: inputContent,
           output: formattedContent,
@@ -114,15 +132,28 @@ function InputPanel() {
           type: 'update',
           changes: result.changes
         });
-
-        setLoading(false);
-        setInputContent('');
+        updateProcessingStep(stepIndex, { status: 'completed', duration: 0 });
       }
+
+      setLoading(false);
+      setInputContent('');
+
+      // 3秒后自动隐藏进度
+      setTimeout(() => {
+        setShowProgress(false);
+      }, 3000);
 
     } catch (error) {
       console.error('AI处理失败:', error);
       setError(`处理失败: ${error.message}`);
       setLoading(false);
+
+      // 标记当前步骤为失败
+      const { processingSteps } = useOntologyStore.getState();
+      const lastRunningIndex = processingSteps.findIndex(s => s.status === 'running');
+      if (lastRunningIndex >= 0) {
+        updateProcessingStep(lastRunningIndex, { status: 'error', error: error.message });
+      }
     }
   };
 

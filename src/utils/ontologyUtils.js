@@ -154,6 +154,41 @@ function getNodeStyle(type) {
 }
 
 /**
+ * 清理本体数据 - 移除无效的边
+ */
+export function sanitizeOntology(ontology) {
+  if (!ontology || typeof ontology !== 'object') {
+    return ontology;
+  }
+
+  if (!Array.isArray(ontology.nodes) || !Array.isArray(ontology.edges)) {
+    return ontology;
+  }
+
+  // 创建节点ID集合
+  const nodeIds = new Set(ontology.nodes.map(n => n.id));
+
+  // 过滤掉引用不存在节点的边
+  const validEdges = ontology.edges.filter(edge => {
+    const isValid = nodeIds.has(edge.source) && nodeIds.has(edge.target);
+    if (!isValid) {
+      console.warn(`[自动清理] 移除无效边: ${edge.id} (${edge.source} -> ${edge.target})`);
+    }
+    return isValid;
+  });
+
+  const removedCount = ontology.edges.length - validEdges.length;
+  if (removedCount > 0) {
+    console.info(`[自动清理] 已移除 ${removedCount} 条无效边`);
+  }
+
+  return {
+    ...ontology,
+    edges: validEdges
+  };
+}
+
+/**
  * 验证本体数据结构
  */
 export function validateOntology(ontology) {
@@ -176,14 +211,10 @@ export function validateOntology(ontology) {
     }
   }
 
-  // 验证边
-  const nodeIds = new Set(ontology.nodes.map(n => n.id));
+  // 验证边（只检查必要字段，节点引用问题已由sanitizeOntology处理）
   for (const edge of ontology.edges) {
     if (!edge.id || !edge.source || !edge.target) {
       return { valid: false, error: '边缺少必要字段（id、source或target）' };
-    }
-    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
-      return { valid: false, error: `边引用了不存在的节点: ${edge.id}` };
     }
   }
 
@@ -266,6 +297,7 @@ export default {
   convertToReactFlowEdges,
   convertFromReactFlowNodes,
   convertFromReactFlowEdges,
+  sanitizeOntology,
   validateOntology,
   createEmptyOntology,
   updateOntologyTimestamp,
