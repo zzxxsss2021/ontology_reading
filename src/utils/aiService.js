@@ -1,18 +1,17 @@
 /**
  * AI 服务接口 - 用于调用AI模型进行本体构建和内容整理
- *
- * TODO: 待用户提供API配置后实现
  */
 
 import { getPromptTemplate } from '../prompts/templates.js';
 
 export class AIService {
   constructor(config) {
+    // 优先使用传入的配置，其次使用环境变量
     this.config = config || {
-      provider: 'openai',
-      modelName: '',
-      apiToken: '',
-      apiEndpoint: ''
+      provider: import.meta.env.VITE_AI_PROVIDER || 'moonshot',
+      modelName: import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k',
+      apiToken: import.meta.env.VITE_AI_API_TOKEN || '',
+      apiEndpoint: import.meta.env.VITE_AI_API_ENDPOINT || 'https://api.moonshot.cn/v1/chat/completions'
     };
   }
 
@@ -33,20 +32,22 @@ export class AIService {
       throw new Error('AI服务未配置，请在设置中配置API Token和模型名称');
     }
 
-    // TODO: 实现AI调用逻辑
-    // 1. 获取Prompt模板
-    // const prompt = getPromptTemplate('build', { content });
-    //
-    // 2. 调用AI API
-    // const response = await this.callAI(prompt);
-    //
-    // 3. 解析返回的JSON
-    // const ontology = JSON.parse(response);
-    //
-    // 4. 返回本体数据
-    // return ontology;
+    try {
+      // 1. 获取Prompt模板
+      const prompt = getPromptTemplate('build', { content });
 
-    throw new Error('AI服务功能待实现 - 请等待后续开发');
+      // 2. 调用AI API
+      const response = await this.callAI(prompt);
+
+      // 3. 解析返回的JSON
+      const ontology = this.parseOntologyResponse(response);
+
+      // 4. 返回本体数据
+      return ontology;
+    } catch (error) {
+      console.error('构建本体失败:', error);
+      throw new Error(`构建本体失败: ${error.message}`);
+    }
   }
 
   /**
@@ -60,23 +61,22 @@ export class AIService {
       throw new Error('AI服务未配置，请在设置中配置API Token和模型名称');
     }
 
-    // TODO: 实现AI调用逻辑
-    // 1. 获取Prompt模板
-    // const prompt = getPromptTemplate('update', { content, existingOntology });
-    //
-    // 2. 调用AI API
-    // const response = await this.callAI(prompt);
-    //
-    // 3. 解析返回的JSON
-    // const result = JSON.parse(response);
-    //
-    // 4. 返回新本体和变更信息
-    // return {
-    //   ontology: result.ontology,
-    //   changes: result.changes
-    // };
+    try {
+      // 1. 获取Prompt模板
+      const prompt = getPromptTemplate('update', { content, existingOntology });
 
-    throw new Error('AI服务功能待实现 - 请等待后续开发');
+      // 2. 调用AI API
+      const response = await this.callAI(prompt);
+
+      // 3. 解析返回的JSON
+      const result = this.parseUpdateResponse(response);
+
+      // 4. 返回新本体和变更信息
+      return result;
+    } catch (error) {
+      console.error('更新本体失败:', error);
+      throw new Error(`更新本体失败: ${error.message}`);
+    }
   }
 
   /**
@@ -90,17 +90,19 @@ export class AIService {
       throw new Error('AI服务未配置，请在设置中配置API Token和模型名称');
     }
 
-    // TODO: 实现AI调用逻辑
-    // 1. 获取Prompt模板
-    // const prompt = getPromptTemplate('format', { content, ontology });
-    //
-    // 2. 调用AI API
-    // const response = await this.callAI(prompt);
-    //
-    // 3. 返回格式化内容
-    // return response;
+    try {
+      // 1. 获取Prompt模板
+      const prompt = getPromptTemplate('format', { content, ontology });
 
-    throw new Error('AI服务功能待实现 - 请等待后续开发');
+      // 2. 调用AI API
+      const response = await this.callAI(prompt);
+
+      // 3. 返回格式化内容
+      return response;
+    } catch (error) {
+      console.error('格式化内容失败:', error);
+      throw new Error(`格式化内容失败: ${error.message}`);
+    }
   }
 
   /**
@@ -110,65 +112,210 @@ export class AIService {
   async callAI(prompt) {
     const { provider, modelName, apiToken, apiEndpoint } = this.config;
 
-    // TODO: 根据provider选择不同的API调用方式
+    console.log(`调用AI服务: ${provider} - ${modelName}`);
 
-    // OpenAI示例
-    if (provider === 'openai') {
-      const endpoint = apiEndpoint || 'https://api.openai.com/v1/chat/completions';
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiToken}`
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`AI API调用失败: ${response.statusText}`);
+    try {
+      // Moonshot (Kimi) API
+      if (provider === 'moonshot') {
+        return await this.callMoonshotAPI(prompt, modelName, apiToken, apiEndpoint);
       }
 
-      const data = await response.json();
-      return data.choices[0].message.content;
-    }
-
-    // Anthropic Claude示例
-    if (provider === 'anthropic') {
-      const endpoint = apiEndpoint || 'https://api.anthropic.com/v1/messages';
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiToken,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 2000
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`AI API调用失败: ${response.statusText}`);
+      // OpenAI API
+      if (provider === 'openai') {
+        return await this.callOpenAI(prompt, modelName, apiToken, apiEndpoint);
       }
 
-      const data = await response.json();
-      return data.content[0].text;
+      // Anthropic Claude API
+      if (provider === 'anthropic') {
+        return await this.callAnthropic(prompt, modelName, apiToken, apiEndpoint);
+      }
+
+      throw new Error(`不支持的AI提供商: ${provider}`);
+    } catch (error) {
+      console.error('AI API调用失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 调用 Moonshot (Kimi) API
+   */
+  async callMoonshotAPI(prompt, modelName, apiToken, apiEndpoint) {
+    const endpoint = apiEndpoint || 'https://api.moonshot.cn/v1/chat/completions';
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiToken}`
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个专业的知识本体构建专家。请严格按照要求输出JSON格式的数据。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 4000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Moonshot API调用失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
     }
 
-    throw new Error(`不支持的AI提供商: ${provider}`);
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+
+  /**
+   * 调用 OpenAI API
+   */
+  async callOpenAI(prompt, modelName, apiToken, apiEndpoint) {
+    const endpoint = apiEndpoint || 'https://api.openai.com/v1/chat/completions';
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiToken}`
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个专业的知识本体构建专家。请严格按照要求输出JSON格式的数据。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 4000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenAI API调用失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  }
+
+  /**
+   * 调用 Anthropic Claude API
+   */
+  async callAnthropic(prompt, modelName, apiToken, apiEndpoint) {
+    const endpoint = apiEndpoint || 'https://api.anthropic.com/v1/messages';
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiToken,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3,
+        system: '你是一个专业的知识本体构建专家。请严格按照要求输出JSON格式的数据。'
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Anthropic API调用失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.content[0].text;
+  }
+
+  /**
+   * 解析本体构建响应
+   */
+  parseOntologyResponse(response) {
+    try {
+      // 尝试提取JSON（可能被markdown代码块包裹）
+      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, response];
+      const jsonStr = jsonMatch[1].trim();
+
+      const ontology = JSON.parse(jsonStr);
+
+      // 验证格式
+      if (!ontology.nodes || !Array.isArray(ontology.nodes)) {
+        throw new Error('返回的本体数据缺少nodes字段');
+      }
+      if (!ontology.edges || !Array.isArray(ontology.edges)) {
+        throw new Error('返回的本体数据缺少edges字段');
+      }
+
+      // 添加时间戳和版本
+      return {
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        nodes: ontology.nodes.map(node => ({
+          ...node,
+          source: 'auto'
+        })),
+        edges: ontology.edges.map(edge => ({
+          ...edge,
+          source: 'auto'
+        }))
+      };
+    } catch (error) {
+      console.error('解析AI响应失败:', error);
+      console.error('原始响应:', response);
+      throw new Error(`解析AI响应失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 解析本体更新响应
+   */
+  parseUpdateResponse(response) {
+    try {
+      // 尝试提取JSON
+      const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, response];
+      const jsonStr = jsonMatch[1].trim();
+
+      const result = JSON.parse(jsonStr);
+
+      // 添加时间戳
+      const updatedOntology = {
+        ...result,
+        version: (result.version || 1) + 1,
+        updated_at: new Date().toISOString()
+      };
+
+      return {
+        ontology: updatedOntology,
+        changes: result.changes || {}
+      };
+    } catch (error) {
+      console.error('解析更新响应失败:', error);
+      console.error('原始响应:', response);
+      throw new Error(`解析更新响应失败: ${error.message}`);
+    }
   }
 
   /**

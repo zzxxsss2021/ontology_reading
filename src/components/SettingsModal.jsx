@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
-import { XMarkIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, Cog6ToothIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import useOntologyStore from '../store/useOntologyStore';
 
 /**
@@ -17,10 +17,16 @@ function SettingsModal({ isOpen, onClose }) {
   } = useOntologyStore();
 
   const [formData, setFormData] = useState({
-    modelProvider: 'openai',
+    modelProvider: 'moonshot',
     modelName: '',
     apiToken: ''
   });
+
+  // 检查环境变量配置
+  const envConfigured = Boolean(
+    import.meta.env.VITE_AI_API_TOKEN &&
+    import.meta.env.VITE_AI_MODEL
+  );
 
   useEffect(() => {
     if (settings) {
@@ -81,6 +87,22 @@ function SettingsModal({ isOpen, onClose }) {
 
           {/* 内容区域 */}
           <div className="px-6 py-4 space-y-6 max-h-[70vh] overflow-y-auto">
+            {/* 环境变量状态提示 */}
+            {envConfigured && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md flex items-start gap-2">
+                <CheckCircleIcon className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-green-800">
+                    已通过环境变量配置 AI 服务
+                  </p>
+                  <p className="text-xs text-green-700 mt-1">
+                    提供商: {import.meta.env.VITE_AI_PROVIDER || 'moonshot'} |
+                    模型: {import.meta.env.VITE_AI_MODEL || 'moonshot-v1-8k'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* AI 模型配置 */}
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-3">
@@ -98,6 +120,7 @@ function SettingsModal({ isOpen, onClose }) {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
+                    <option value="moonshot">Moonshot (Kimi)</option>
                     <option value="openai">OpenAI</option>
                     <option value="anthropic">Anthropic (Claude)</option>
                   </select>
@@ -113,7 +136,13 @@ function SettingsModal({ isOpen, onClose }) {
                     onChange={(e) =>
                       setFormData({ ...formData, modelName: e.target.value })
                     }
-                    placeholder="例如: gpt-4o, claude-opus-4-6"
+                    placeholder={
+                      formData.modelProvider === 'moonshot'
+                        ? '例如: moonshot-v1-8k, moonshot-v1-32k'
+                        : formData.modelProvider === 'openai'
+                        ? '例如: gpt-4o, gpt-4-turbo'
+                        : '例如: claude-opus-4-6, claude-sonnet-4-5'
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -136,11 +165,20 @@ function SettingsModal({ isOpen, onClose }) {
                   </p>
                 </div>
 
-                {!formData.apiToken && (
+                {/* 配置提示 */}
+                {!envConfigured && !formData.apiToken && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-xs text-blue-800">
-                      💡 AI功能需要配置API Token。配置后即可使用自动本体构建功能。
+                    <p className="text-xs text-blue-800 font-medium mb-2">
+                      💡 推荐使用环境变量配置（更安全）
                     </p>
+                    <p className="text-xs text-blue-700">
+                      在项目根目录创建 .env.local 文件，配置：
+                    </p>
+                    <pre className="text-xs mt-2 p-2 bg-white rounded border border-blue-200 overflow-x-auto">
+{`VITE_AI_PROVIDER=moonshot
+VITE_AI_MODEL=moonshot-v1-8k
+VITE_AI_API_TOKEN=your_token_here`}
+                    </pre>
                   </div>
                 )}
               </div>
@@ -201,6 +239,14 @@ function SettingsModal({ isOpen, onClose }) {
                 <p className="text-gray-500 mt-2">
                   基于图数据库本体构建概念，帮助您更好地组织和理解知识。
                 </p>
+                <p className="text-gray-500 mt-2">
+                  当前支持的 AI 模型：
+                </p>
+                <ul className="text-gray-500 list-disc list-inside pl-2">
+                  <li>Moonshot (Kimi) - moonshot-v1-8k/32k/128k</li>
+                  <li>OpenAI - gpt-4/gpt-4o/gpt-4-turbo</li>
+                  <li>Anthropic - claude-opus/sonnet</li>
+                </ul>
               </div>
             </div>
           </div>
