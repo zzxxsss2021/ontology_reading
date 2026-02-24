@@ -74,7 +74,8 @@ function InputPanel() {
           status: 'completed',
           duration: ontologyDuration,
           details: `生成 ${newOntology.nodes?.length || 0} 个概念节点，${newOntology.edges?.length || 0} 条关系`,
-          tokens: buildResult.usage
+          tokens: buildResult.usage,
+          response: JSON.stringify(newOntology, null, 2)
         });
         stepIndex++;
 
@@ -93,7 +94,8 @@ function InputPanel() {
           status: 'completed',
           duration: formatDuration,
           details: `生成 ${formattedContent.length} 字符`,
-          tokens: formatResult.usage
+          tokens: formatResult.usage,
+          response: formattedContent
         });
         stepIndex++;
 
@@ -139,7 +141,8 @@ function InputPanel() {
           status: 'completed',
           duration: formatDuration,
           details: `生成 ${formattedContent.length} 字符`,
-          tokens: formatResult.usage
+          tokens: formatResult.usage,
+          response: formattedContent
         });
         stepIndex++;
 

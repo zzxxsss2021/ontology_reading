@@ -9,6 +9,7 @@ function OutputPanel() {
   const { currentOutput, error, isLoading, processingSteps } = useOntologyStore();
   const [showProgress, setShowProgress] = useState(true);
   const [expandedPrompts, setExpandedPrompts] = useState({});
+  const [expandedResponses, setExpandedResponses] = useState({});
 
   return (
     <div className="h-1/2 flex flex-col">
@@ -104,20 +105,34 @@ function OutputPanel() {
                             }))}
                             className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                           >
-                            {expandedPrompts[index] ? '收起' : '查看'} 输入内容
-                            <svg
-                              className={`h-3 w-3 transition-transform ${expandedPrompts[index] ? 'rotate-180' : ''}`}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
+                            {expandedPrompts[index] ? '▼' : '▶'} 输入内容
                           </button>
                           {expandedPrompts[index] && (
-                            <div className="mt-2 p-3 bg-gray-50 rounded border border-gray-200 max-h-60 overflow-y-auto">
+                            <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200 max-h-60 overflow-y-auto">
+                              <div className="text-xs text-blue-900 font-semibold mb-1">AI 输入 (Prompt):</div>
                               <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
                                 {step.prompt}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {step.response && (
+                        <div className="mt-2">
+                          <button
+                            onClick={() => setExpandedResponses(prev => ({
+                              ...prev,
+                              [index]: !prev[index]
+                            }))}
+                            className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"
+                          >
+                            {expandedResponses[index] ? '▼' : '▶'} 输出内容
+                          </button>
+                          {expandedResponses[index] && (
+                            <div className="mt-2 p-3 bg-green-50 rounded border border-green-200 max-h-60 overflow-y-auto">
+                              <div className="text-xs text-green-900 font-semibold mb-1">AI 输出 (Response):</div>
+                              <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+                                {step.response}
                               </pre>
                             </div>
                           )}
