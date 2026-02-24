@@ -54,111 +54,46 @@ function InputPanel() {
       updateProcessingStep(stepIndex, { status: 'completed' });
       stepIndex++;
 
-      const isFirstTime = !ontology || ontology.nodes.length === 0;
-      let newOntology;
-      let formattedContent;
-
-      if (isFirstTime) {
-        // 步骤2: 构建本体
-        const buildPrompt = aiService.getLastPrompt('build', inputContent);
-        addProcessingStep({
-          name: '🧠 AI构建知识本体',
-          status: 'running',
-          prompt: buildPrompt
-        });
-        const ontologyStartTime = Date.now();
-        const buildResult = await aiService.buildOntology(inputContent);
-        newOntology = buildResult.ontology;
-        const ontologyDuration = Date.now() - ontologyStartTime;
-        updateProcessingStep(stepIndex, {
-          status: 'completed',
-          duration: ontologyDuration,
-          details: `生成 ${newOntology.nodes?.length || 0} 个概念节点，${newOntology.edges?.length || 0} 条关系`,
-          tokens: buildResult.usage,
-          response: JSON.stringify(newOntology, null, 2)
-        });
-        stepIndex++;
-
-        // 步骤3: 格式化内容
-        const formatPrompt = aiService.getLastPrompt('format', inputContent, newOntology);
-        addProcessingStep({
-          name: '📝 整理输出内容',
-          status: 'running',
-          prompt: formatPrompt
-        });
-        const formatStartTime = Date.now();
-        const formatResult = await aiService.formatContent(inputContent, newOntology);
-        formattedContent = formatResult.content;
-        const formatDuration = Date.now() - formatStartTime;
-        updateProcessingStep(stepIndex, {
-          status: 'completed',
-          duration: formatDuration,
-          details: `生成 ${formattedContent.length} 字符`,
-          tokens: formatResult.usage,
-          response: formattedContent
-        });
-        stepIndex++;
-
-        // 步骤4: 保存数据
-        addProcessingStep({ name: '💾 保存到本地存储', status: 'running' });
-        updateOntology(newOntology);
-        setCurrentOutput(formattedContent);
-        addHistoryItem({
-          input: inputContent,
-          output: formattedContent,
-          ontology_version: newOntology.version,
-          type: 'build'
-        });
-        updateProcessingStep(stepIndex, { status: 'completed', duration: 0 });
-
-      } else {
-        // 步骤2: 更新本体
-        addProcessingStep({ name: '🔄 AI更新知识本体', status: 'running' });
-        const updateStartTime = Date.now();
-        const updateResult = await aiService.updateOntology(inputContent, ontology);
-        newOntology = updateResult.ontology;
-        const updateDuration = Date.now() - updateStartTime;
-        updateProcessingStep(stepIndex, {
-          status: 'completed',
-          duration: updateDuration,
-          details: `新增 ${updateResult.changes?.added_nodes?.length || 0} 个节点，${updateResult.changes?.added_edges?.length || 0} 条关系`,
-          tokens: updateResult.usage
-        });
-        stepIndex++;
-
-        // 步骤3: 格式化内容
-        const formatPrompt2 = aiService.getLastPrompt('format', inputContent, newOntology);
-        addProcessingStep({
-          name: '📝 整理输出内容',
-          status: 'running',
-          prompt: formatPrompt2
-        });
-        const formatStartTime = Date.now();
-        const formatResult = await aiService.formatContent(inputContent, newOntology);
-        formattedContent = formatResult.content;
-        const formatDuration = Date.now() - formatStartTime;
-        updateProcessingStep(stepIndex, {
-          status: 'completed',
-          duration: formatDuration,
-          details: `生成 ${formattedContent.length} 字符`,
-          tokens: formatResult.usage,
-          response: formattedContent
-        });
-        stepIndex++;
-
-        // 步骤4: 保存数据
-        addProcessingStep({ name: '💾 保存到本地存储', status: 'running' });
-        updateOntology(newOntology);
-        setCurrentOutput(formattedContent);
-        addHistoryItem({
-          input: inputContent,
-          output: formattedContent,
-          ontology_version: newOntology.version,
-          type: 'update',
-          changes: updateResult.changes
-        });
-        updateProcessingStep(stepIndex, { status: 'completed', duration: 0 });
+      // 检查是否有本体
+      if (!ontology || !ontology.nodes || ontology.nodes.length === 0) {
+        updateProcessingStep(stepIndex, { status: 'error', error: '尚未构建本体' });
+        setError('请先在"本体管理"中构建知识本体，然后再使用本功能整理内容。');
+        setLoading(false);
+        return;
       }
+      updateProcessingStep(stepIndex, { status: 'completed' });
+      stepIndex++;
+
+      // 步骤2: 基于现有本体格式化内容
+      const formatPrompt = aiService.getLastPrompt('format', inputContent, ontology);
+      addProcessingStep({
+        name: '📝 基于本体整理内容',
+        status: 'running',
+        prompt: formatPrompt
+      });
+      const formatStartTime = Date.now();
+      const formatResult = await aiService.formatContent(inputContent, ontology);
+      const formattedContent = formatResult.content;
+      const formatDuration = Date.now() - formatStartTime;
+      updateProcessingStep(stepIndex, {
+        status: 'completed',
+        duration: formatDuration,
+        details: `生成 ${formattedContent.length} 字符`,
+        tokens: formatResult.usage,
+        response: formattedContent
+      });
+      stepIndex++;
+
+      // 步骤3: 保存输出结果
+      addProcessingStep({ name: '💾 保存到本地存储', status: 'running' });
+      setCurrentOutput(formattedContent);
+      addHistoryItem({
+        input: inputContent,
+        output: formattedContent,
+        ontology_version: ontology.version,
+        type: 'format'
+      });
+      updateProcessingStep(stepIndex, { status: 'completed', duration: 0 });
 
       setLoading(false);
       setInputContent('');
